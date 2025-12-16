@@ -30,6 +30,8 @@ func main() {
 	}))
 	v1Router := chi.NewRouter()
 	v1Router.Get("/healthz", handlerReadiness)
+	// when something went wrong this endpoint return the consistent return with error
+	v1Router.Get("/err", handleErr)
 	router.Mount("/v1", v1Router)
 	serv := &http.Server{
 		Handler: router,
