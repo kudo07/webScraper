@@ -1,6 +1,7 @@
 package main
 
 import (
+	"database/sql"
 	"fmt"
 	"log"
 	"net/http"
@@ -10,6 +11,7 @@ import (
 	"github.com/go-chi/cors"
 	"github.com/joho/godotenv"
 	"github.com/kudo07/webScraper/internal/database"
+	_ "github.com/lib/pq"
 )
 
 type apiConfig struct {
@@ -22,6 +24,17 @@ func main() {
 	portString := os.Getenv("PORT")
 	if portString == "" {
 		log.Fatal("PORT is not found")
+	}
+	dbURL := os.Getenv("DB_URL")
+	if dbURL == "" {
+		log.Fatalln("DB_URL environment variable not set")
+	}
+	conn, err := sql.Open("postgres", dbURL)
+	if err != nil {
+		log.Fatalln("can't connect to database", err)
+	}
+	apiCnfg := apiConfig{
+		DB: database.New(conn),
 	}
 	router := chi.NewRouter()
 
@@ -37,13 +50,15 @@ func main() {
 	v1Router.Get("/healthz", handlerReadiness)
 	// when something went wrong this endpoint return the consistent return with error
 	v1Router.Get("/err", handleErr)
+	v1Router.Post("/users", apiCnfg.hadnlerCreateUser)
+
 	router.Mount("/v1", v1Router)
 	serv := &http.Server{
 		Handler: router,
 		Addr:    ":" + portString,
 	}
 	log.Printf("Server starting on port %v", portString)
-	err := serv.ListenAndServe()
+	err = serv.ListenAndServe()
 	if err != nil {
 		log.Fatal(err)
 	}
