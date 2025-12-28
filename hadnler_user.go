@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/kudo07/webScraper/internal/auth"
 	"github.com/kudo07/webScraper/internal/database"
 )
 
@@ -32,4 +33,19 @@ func (apiCnfg *apiConfig) hadnlerCreateUser(w http.ResponseWriter, r *http.Reque
 		return
 	}
 	respondWithJSON(w, http.StatusCreated, databaseUserToUser(user))
+}
+
+func (apiCfg *apiConfig) handlerGetUser(w http.ResponseWriter, r *http.Request) {
+	// authenticated only user
+	apiKey, err := auth.GetApiKey(r.Header)
+	if err != nil {
+		respondWithError(w, 403, fmt.Sprintf("Auth error: %v", err))
+		return
+	}
+	user, err := apiCfg.DB.GetUserByApiKey(r.Context(), apiKey)
+	if err != nil {
+		respondWithError(w, 400, fmt.Sprintf("Couldn't get user: %v", err))
+		return
+	}
+	respondWithJSON(w, 200, databaseUserToUser(user))
 }

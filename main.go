@@ -51,6 +51,7 @@ func main() {
 	// when something went wrong this endpoint return the consistent return with error
 	v1Router.Get("/err", handleErr)
 	v1Router.Post("/users", apiCnfg.hadnlerCreateUser)
+	v1Router.Get("/users", apiCnfg.handlerGetUser)
 
 	router.Mount("/v1", v1Router)
 	serv := &http.Server{
